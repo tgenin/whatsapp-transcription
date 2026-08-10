@@ -1,0 +1,41 @@
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, Form, UploadFile
+
+from app.core.config import Settings, get_settings
+from app.core.constants import ALLOWED_AUDIO_EXTENSIONS
+from app.core.exceptions import (
+    EmptyFileError,
+    FileTooLargeError,
+    UnsupportedAudioFormatError,
+)
+from app.models.schemas import TranscriptResponse
+from app.services.transcription import TranscriptionService, get_transcription_service
+
+router = APIRouter()
+
+
+@router.post("/transcript", response_model=TranscriptResponse)
+def transcript(
+    audio: UploadFile = File(...),
+    language: str = Form(...),
+    settings: Settings = Depends(get_settings),
+    service: TranscriptionService = Depends(get_transcription_service),
+) -> TranscriptResponse:
+    audio_bytes = audio.file.read()
+
+    if not audio_bytes:
+        raise EmptyFileError("Uploaded audio file is empty")
+
+    extension = Path(audio.filename or "").suffix.lower()
+    if extension not in ALLOWED_AUDIO_EXTENSIONS:
+        raise UnsupportedAudioFormatError(
+            f"'{extension}' is not a supported audio format"
+        )
+
+    if len(audio_bytes) > settings.max_upload_size_bytes:
+        raise FileTooLargeError(
+            f"Uploaded audio file exceeds the {settings.max_upload_size_bytes} byte limit"
+        )
+
+    return service.transcribe(audio_bytes, language)
