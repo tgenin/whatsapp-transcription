@@ -34,8 +34,7 @@ def transcript(
         )
 
     if len(audio_bytes) > settings.max_upload_size_bytes:
-        raise FileTooLargeError(
-            f"Uploaded audio file exceeds the {settings.max_upload_size_bytes} byte limit"
-        )
+        max_size = settings.max_upload_size_bytes
+        raise FileTooLargeError(f"Audio file exceeds the {max_size} byte limit")
 
     return service.transcribe(audio_bytes, language)
