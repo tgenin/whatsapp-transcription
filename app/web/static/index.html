@@ -3,6 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#25d366" />
+    <link rel="manifest" href="/manifest.json" />
     <title>WhatsApp Transcription</title>
     <style>
       body {
@@ -55,6 +57,41 @@
         const data = await response.json();
         result.textContent = response.ok ? data.text : `Erreur : ${data.message}`;
       });
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js");
+      }
+
+      const SHARE_TARGET_CACHE = "share-target-cache";
+      const SHARED_AUDIO_KEY = "/shared-audio";
+
+      async function prefillSharedAudio() {
+        if (new URLSearchParams(location.search).get("shared") !== "1") {
+          return;
+        }
+        history.replaceState(null, "", location.pathname);
+
+        if (!("caches" in window)) {
+          return;
+        }
+        const cache = await caches.open(SHARE_TARGET_CACHE);
+        const response = await cache.match(SHARED_AUDIO_KEY);
+        if (!response) {
+          return;
+        }
+        await cache.delete(SHARED_AUDIO_KEY);
+
+        const blob = await response.blob();
+        const filename = response.headers.get("X-Shared-Filename") || "shared-audio.ogg";
+        const file = new File([blob], filename, { type: blob.type });
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        document.getElementById("audio").files = dataTransfer.files;
+        document.getElementById("language").focus();
+      }
+
+      prefillSharedAudio();
     </script>
   </body>
 </html>
