@@ -28,6 +28,7 @@ Settings are read from environment variables (see `.env.example`):
 | `WHISPER_COMPUTE_TYPE`   | `int8`     | CTranslate2 compute type                               |
 | `MAX_UPLOAD_SIZE_BYTES`  | `26214400` | Upload size cap (25 MB)                                |
 | `LOG_LEVEL`              | `INFO`     | structlog log level                                    |
+| `UI_PASSWORD`            | _required_ | Password protecting the web UI and the API             |
 
 ## Running
 
@@ -57,6 +58,10 @@ Response:
 ```
 
 `language` is required and never auto-detected — a valid ISO 639-1 code must be supplied. Accepted audio extensions: `.opus`, `.ogg`.
+
+### Web UI
+
+A minimal upload page is served at `http://127.0.0.1:8000/`. Both the page and the `/transcript` API are protected by HTTP Basic Auth: the browser will prompt for a username and password — the username is ignored, only the password (`UI_PASSWORD`) is checked.
 
 ## Development
 

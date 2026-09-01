@@ -1,10 +1,17 @@
 class TranscriptionAPIError(Exception):
     status_code: int = 500
     error_code: str = "internal_error"
+    headers: dict[str, str] | None = None
 
     def __init__(self, message: str) -> None:
         super().__init__(message)
         self.message = message
+
+
+class UnauthorizedError(TranscriptionAPIError):
+    status_code = 401
+    error_code = "unauthorized"
+    headers = {"WWW-Authenticate": "Basic"}
 
 
 class EmptyFileError(TranscriptionAPIError):

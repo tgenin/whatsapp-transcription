@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging import configure_logging
 from app.services.transcription import get_transcription_service
+from app.web.router import router as ui_router
 
 
 @asynccontextmanager
@@ -21,3 +22,4 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(lifespan=lifespan)
 register_exception_handlers(app)
 app.include_router(transcript_router)
+app.include_router(ui_router)

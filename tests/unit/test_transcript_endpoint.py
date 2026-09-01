@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings, get_settings
+from app.core.security import verify_credentials
 from app.main import app
 from app.models.schemas import TranscriptResponse
 from app.services.transcription import get_transcription_service
@@ -30,6 +31,7 @@ def _clear_overrides() -> Iterator[None]:
 
 @pytest.fixture
 def client() -> TestClient:
+    app.dependency_overrides[verify_credentials] = lambda: None
     return TestClient(app)
 
 
@@ -61,7 +63,7 @@ def test_transcript_returns_transcription_result(client: TestClient) -> None:
         (
             "note.opus",
             b"fake-audio-bytes",
-            Settings(max_upload_size_bytes=4),
+            Settings(max_upload_size_bytes=4, ui_password="test-password"),
             "file_too_large",
         ),
     ],
@@ -85,3 +87,55 @@ def test_transcript_rejects_invalid_upload(
 
     assert response.status_code == 400
     assert response.json()["error_code"] == expected_error_code
+
+
+def test_transcript_rejects_missing_credentials() -> None:
+    app.dependency_overrides[get_transcription_service] = FakeTranscriptionService
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        _env_file=None, ui_password="correct-password"
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/transcript",
+        files={"audio": ("note.opus", io.BytesIO(b"fake-audio-bytes"), "audio/opus")},
+        data={"language": "en"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["error_code"] == "unauthorized"
+
+
+def test_transcript_rejects_wrong_password() -> None:
+    app.dependency_overrides[get_transcription_service] = FakeTranscriptionService
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        _env_file=None, ui_password="correct-password"
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/transcript",
+        files={"audio": ("note.opus", io.BytesIO(b"fake-audio-bytes"), "audio/opus")},
+        data={"language": "en"},
+        auth=("user", "wrong-password"),
+    )
+
+    assert response.status_code == 401
+    assert response.json()["error_code"] == "unauthorized"
+
+
+def test_transcript_accepts_correct_password() -> None:
+    app.dependency_overrides[get_transcription_service] = FakeTranscriptionService
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        _env_file=None, ui_password="correct-password"
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/transcript",
+        files={"audio": ("note.opus", io.BytesIO(b"fake-audio-bytes"), "audio/opus")},
+        data={"language": "en"},
+        auth=("user", "correct-password"),
+    )
+
+    assert response.status_code == 200

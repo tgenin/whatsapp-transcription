@@ -11,6 +11,7 @@ from app.core.exceptions import (
     ModelUnavailableError,
     TranscriptionAPIError,
     TranscriptionEngineError,
+    UnauthorizedError,
     UnsupportedAudioFormatError,
 )
 
@@ -25,6 +26,7 @@ from app.core.exceptions import (
         (AudioDecodingError, 422, "audio_decoding_error"),
         (TranscriptionEngineError, 500, "transcription_engine_error"),
         (ModelUnavailableError, 503, "model_unavailable"),
+        (UnauthorizedError, 401, "unauthorized"),
     ],
 )
 def test_exception_status_code_and_error_code(
@@ -48,6 +50,7 @@ def test_all_exceptions_are_transcription_api_errors() -> None:
         AudioDecodingError,
         TranscriptionEngineError,
         ModelUnavailableError,
+        UnauthorizedError,
     ):
         assert issubclass(exc_class, TranscriptionAPIError)
 
@@ -64,6 +67,10 @@ def client() -> TestClient:
     @app.get("/model-unavailable")
     def raise_model_unavailable() -> None:
         raise ModelUnavailableError("model is not loaded")
+
+    @app.get("/unauthorized")
+    def raise_unauthorized() -> None:
+        raise UnauthorizedError("Invalid credentials")
 
     @app.get("/validation")
     def raise_validation(required_param: int) -> None:
@@ -96,6 +103,19 @@ def test_transcription_api_error_handler_maps_503(client: TestClient) -> None:
         "error_code": "model_unavailable",
         "message": "model is not loaded",
     }
+
+
+def test_transcription_api_error_handler_sends_www_authenticate_header(
+    client: TestClient,
+) -> None:
+    response = client.get("/unauthorized")
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "error_code": "unauthorized",
+        "message": "Invalid credentials",
+    }
+    assert response.headers["www-authenticate"] == "Basic"
 
 
 def test_validation_error_handler_returns_422(client: TestClient) -> None:

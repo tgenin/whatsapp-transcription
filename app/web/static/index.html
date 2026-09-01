@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WhatsApp Transcription</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 32rem;
+        margin: 3rem auto;
+        padding: 0 1rem;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      button {
+        padding: 0.5rem;
+        cursor: pointer;
+      }
+      pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #f2f2f2;
+        padding: 1rem;
+        border-radius: 0.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Transcription de note vocale</h1>
+    <form id="upload-form">
+      <input type="file" id="audio" accept=".opus,.ogg" required />
+      <input type="text" id="language" placeholder="Code langue (ex: fr)" required />
+      <button type="submit">Transcrire</button>
+    </form>
+    <pre id="result"></pre>
+    <script>
+      const form = document.getElementById("upload-form");
+      const result = document.getElementById("result");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData();
+        formData.append("audio", document.getElementById("audio").files[0]);
+        formData.append("language", document.getElementById("language").value);
+
+        result.textContent = "Transcription en cours...";
+        const response = await fetch("/transcript", { method: "POST", body: formData });
+        const data = await response.json();
+        result.textContent = response.ok ? data.text : `Erreur : ${data.message}`;
+      });
+    </script>
+  </body>
+</html>

@@ -9,13 +9,18 @@ from app.core.exceptions import (
     FileTooLargeError,
     UnsupportedAudioFormatError,
 )
+from app.core.security import verify_credentials
 from app.models.schemas import TranscriptResponse
 from app.services.transcription import TranscriptionService, get_transcription_service
 
 router = APIRouter()
 
 
-@router.post("/transcript", response_model=TranscriptResponse)
+@router.post(
+    "/transcript",
+    response_model=TranscriptResponse,
+    dependencies=[Depends(verify_credentials)],
+)
 def transcript(
     audio: UploadFile = File(...),
     language: str = Form(...),

@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings, get_settings
+from app.core.security import verify_credentials
 from app.main import app
 from app.services.transcription import TranscriptionService, get_transcription_service
 
@@ -19,11 +20,12 @@ def _clear_overrides() -> Iterator[None]:
 
 @pytest.fixture
 def client() -> TestClient:
-    settings = Settings(whisper_model="tiny")
+    settings = Settings(whisper_model="tiny", ui_password="test-password")
     app.dependency_overrides[get_settings] = lambda: settings
     app.dependency_overrides[get_transcription_service] = lambda: TranscriptionService(
         settings
     )
+    app.dependency_overrides[verify_credentials] = lambda: None
     return TestClient(app)
 
 

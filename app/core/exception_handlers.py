@@ -21,6 +21,7 @@ async def transcription_api_error_handler(
     return JSONResponse(
         status_code=exc.status_code,
         content={"error_code": exc.error_code, "message": exc.message},
+        headers=exc.headers,
     )
 
 

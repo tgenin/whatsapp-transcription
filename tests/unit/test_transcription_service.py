@@ -29,7 +29,7 @@ def mock_model(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 
 @pytest.fixture
 def service(mock_model: MagicMock) -> TranscriptionService:
-    return TranscriptionService(Settings())
+    return TranscriptionService(Settings(_env_file=None, ui_password="test-password"))
 
 
 def test_transcribe_returns_joined_text_and_metadata(
