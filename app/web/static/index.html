@@ -33,7 +33,10 @@
     <h1>Transcription de note vocale</h1>
     <form id="upload-form">
       <input type="file" id="audio" accept=".opus,.ogg" required />
-      <input type="text" id="language" placeholder="Code langue (ex: fr)" required />
+      <select id="language" required>
+        <option value="fr" selected>Français</option>
+        <option value="en">English</option>
+      </select>
       <button type="submit">Transcrire</button>
     </form>
     <pre id="result"></pre>

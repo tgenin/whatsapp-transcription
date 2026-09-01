@@ -3,7 +3,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 
 from app.core.config import Settings, get_settings
-from app.core.constants import ALLOWED_AUDIO_EXTENSIONS
+from app.core.constants import ALLOWED_AUDIO_EXTENSIONS, DEFAULT_LANGUAGE
 from app.core.exceptions import (
     EmptyFileError,
     FileTooLargeError,
@@ -23,7 +23,7 @@ router = APIRouter()
 )
 def transcript(
     audio: UploadFile = File(...),
-    language: str = Form(...),
+    language: str = Form(DEFAULT_LANGUAGE),
     settings: Settings = Depends(get_settings),
     service: TranscriptionService = Depends(get_transcription_service),
 ) -> TranscriptResponse:

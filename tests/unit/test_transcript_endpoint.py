@@ -55,6 +55,21 @@ def test_transcript_returns_transcription_result(client: TestClient) -> None:
     assert fake_service.calls == [(b"fake-audio-bytes", "en")]
 
 
+def test_transcript_defaults_to_french_when_language_omitted(
+    client: TestClient,
+) -> None:
+    fake_service = FakeTranscriptionService()
+    app.dependency_overrides[get_transcription_service] = lambda: fake_service
+
+    response = client.post(
+        "/transcript",
+        files={"audio": ("note.opus", io.BytesIO(b"fake-audio-bytes"), "audio/opus")},
+    )
+
+    assert response.status_code == 200
+    assert fake_service.calls == [(b"fake-audio-bytes", "fr")]
+
+
 @pytest.mark.parametrize(
     ("filename", "content", "settings_override", "expected_error_code"),
     [
