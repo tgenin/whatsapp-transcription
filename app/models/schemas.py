@@ -11,3 +11,8 @@ class TranscriptResponse(BaseModel):
 class ErrorResponse(BaseModel):
     error_code: str
     message: str
+
+
+class HealthResponse(BaseModel):
+    status: str
+    transcribed_text: str

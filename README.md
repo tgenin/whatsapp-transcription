@@ -66,6 +66,23 @@ Response:
 
 A minimal upload page is served at `http://127.0.0.1:8000/`. Both the page and the `/transcript` API are protected by HTTP Basic Auth: the browser will prompt for a username and password — the username is ignored, only the password (`UI_PASSWORD`) is checked.
 
+## Health check
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+`GET /health` is unauthenticated (so container orchestrators can probe it without credentials) and runs a real transcription of a bundled sample clip that only says "Bonjour". A `200` response means the model is loaded and actually producing correct output, not just that the process is up:
+
+```json
+{
+  "status": "ok",
+  "transcribed_text": "Bonjour."
+}
+```
+
+If the model fails to load, inference errors out, or the output doesn't match, it returns `503` with `error_code: model_unavailable`. The Docker image's `HEALTHCHECK` calls this endpoint.
+
 ## Offline deployment
 
 To deploy without giving the server access to the Hugging Face Hub, download the model on a machine that does have internet access, then ship the resulting directory alongside the app (e.g. baked into the Docker image or mounted as a volume):
