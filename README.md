@@ -66,6 +66,20 @@ Response:
 
 A minimal upload page is served at `http://127.0.0.1:8000/`. Both the page and the `/transcript` API are protected by HTTP Basic Auth: the browser will prompt for a username and password — the username is ignored, only the password (`UI_PASSWORD`) is checked.
 
+#### Share from WhatsApp (Android)
+
+The web page is a PWA that can be installed and set as a share target, so a WhatsApp voice note can be sent to it directly from the Android share sheet:
+
+1. Open the app's HTTPS URL in Chrome on Android and log in.
+2. Use Chrome's install prompt (or menu → "Add to Home screen").
+3. In WhatsApp, open a voice message → Share → pick the installed app.
+
+This lands directly on the upload page with the audio file already attached — just pick the language and submit. Requirements/caveats:
+
+- Requires HTTPS (Chrome only allows PWA install and share targets over HTTPS or `localhost`).
+- Android/Chrome only — Safari on iOS doesn't support the Web Share Target API.
+- If the browser's cached Basic Auth credentials for the site have expired, it may prompt you to log in again, same as any other visit.
+
 ## Health check
 
 ```bash
