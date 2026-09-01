@@ -18,13 +18,16 @@ cp .env.example .env
 
 The first transcription request needs internet access once, to download the Whisper model weights (cached locally afterwards under `~/.cache/huggingface`). Every request after that — including the model inference itself — runs fully offline; no audio or transcript ever leaves the machine.
 
+To avoid any Hugging Face Hub dependency at runtime (e.g. a server with no outbound internet access), pre-download the CTranslate2 model files on a machine that has internet access and point `WHISPER_MODEL_PATH` at that local directory instead — see [Offline deployment](#offline-deployment).
+
 ## Configuration
 
 Settings are read from environment variables (see `.env.example`):
 
 | Variable                | Default    | Description                                          |
 | ------------------------ | ---------- | ----------------------------------------------------- |
-| `WHISPER_MODEL`          | `small`    | faster-whisper model size                              |
+| `WHISPER_MODEL`          | `small`    | faster-whisper model size (used when `WHISPER_MODEL_PATH` is unset) |
+| `WHISPER_MODEL_PATH`     | _unset_    | Local directory with a pre-downloaded CTranslate2 model; takes priority over `WHISPER_MODEL` |
 | `WHISPER_COMPUTE_TYPE`   | `int8`     | CTranslate2 compute type                               |
 | `MAX_UPLOAD_SIZE_BYTES`  | `26214400` | Upload size cap (25 MB)                                |
 | `LOG_LEVEL`              | `INFO`     | structlog log level                                    |
@@ -62,6 +65,22 @@ Response:
 ### Web UI
 
 A minimal upload page is served at `http://127.0.0.1:8000/`. Both the page and the `/transcript` API are protected by HTTP Basic Auth: the browser will prompt for a username and password — the username is ignored, only the password (`UI_PASSWORD`) is checked.
+
+## Offline deployment
+
+To deploy without giving the server access to the Hugging Face Hub, download the model on a machine that does have internet access, then ship the resulting directory alongside the app (e.g. baked into the Docker image or mounted as a volume):
+
+```bash
+uv run huggingface-cli download Systran/faster-whisper-small --local-dir ./models/faster-whisper-small
+```
+
+On the server, set:
+
+```bash
+WHISPER_MODEL_PATH=/path/to/models/faster-whisper-small
+```
+
+`WHISPER_MODEL_PATH` takes priority over `WHISPER_MODEL` and is passed straight to faster-whisper as a local model directory, so no network call to the Hub is made at startup.
 
 ## Development
 

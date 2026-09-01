@@ -11,6 +11,7 @@ def test_get_settings_returns_cached_instance() -> None:
     ("field", "expected"),
     [
         ("whisper_model", "small"),
+        ("whisper_model_path", None),
         ("whisper_compute_type", "int8"),
         ("max_upload_size_bytes", 25 * 1024 * 1024),
         ("log_level", "INFO"),
@@ -27,3 +28,13 @@ def test_settings_reads_from_environment(monkeypatch: pytest.MonkeyPatch) -> Non
     settings = Settings(_env_file=None, ui_password="test-password")
 
     assert settings.whisper_model == "tiny"
+
+
+def test_settings_reads_whisper_model_path_from_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("WHISPER_MODEL_PATH", "/models/faster-whisper-small")
+
+    settings = Settings(_env_file=None, ui_password="test-password")
+
+    assert settings.whisper_model_path == "/models/faster-whisper-small"

@@ -79,6 +79,35 @@ def test_transcribe_maps_engine_exceptions(
         service.transcribe(b"audio-bytes", "en")
 
 
+@pytest.mark.parametrize(
+    ("whisper_model", "whisper_model_path", "expected_source"),
+    [
+        ("small", None, "small"),
+        ("small", "/models/faster-whisper-small", "/models/faster-whisper-small"),
+    ],
+)
+def test_transcription_service_prefers_local_model_path(
+    monkeypatch: pytest.MonkeyPatch,
+    whisper_model: str,
+    whisper_model_path: str | None,
+    expected_source: str,
+) -> None:
+    whisper_model_cls = MagicMock(return_value=MagicMock())
+    monkeypatch.setattr(transcription_module, "WhisperModel", whisper_model_cls)
+    settings = Settings(
+        _env_file=None,
+        ui_password="test-password",
+        whisper_model=whisper_model,
+        whisper_model_path=whisper_model_path,
+    )
+
+    TranscriptionService(settings)
+
+    whisper_model_cls.assert_called_once_with(
+        expected_source, device="cpu", compute_type=settings.whisper_compute_type
+    )
+
+
 def test_get_transcription_service_is_a_singleton(mock_model: MagicMock) -> None:
     get_transcription_service.cache_clear()
 

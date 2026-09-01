@@ -18,8 +18,10 @@ log = structlog.get_logger()
 
 class TranscriptionService:
     def __init__(self, settings: Settings) -> None:
+        model_source = settings.whisper_model_path or settings.whisper_model
+        log.info("whisper_model_loading", source=model_source)
         self._model = WhisperModel(
-            settings.whisper_model,
+            model_source,
             device="cpu",
             compute_type=settings.whisper_compute_type,
         )
