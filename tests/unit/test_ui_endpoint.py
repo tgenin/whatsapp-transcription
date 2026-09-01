@@ -42,14 +42,8 @@ def test_index_serves_page_with_correct_password(client: TestClient) -> None:
     assert response.headers["content-type"] == "text/html; charset=utf-8"
 
 
-@pytest.mark.parametrize(
-    "path",
-    ["/manifest.json", "/sw.js", "/icon.svg"],
-)
-def test_static_pwa_asset_rejects_missing_credentials(
-    client: TestClient, path: str
-) -> None:
-    response = client.get(path)
+def test_service_worker_rejects_missing_credentials(client: TestClient) -> None:
+    response = client.get("/sw.js")
 
     assert response.status_code == 401
     assert response.json()["error_code"] == "unauthorized"
@@ -70,6 +64,17 @@ def test_static_pwa_asset_served_with_correct_password(
 
     assert response.status_code == 200
     assert response.headers["content-type"] == content_type
+
+
+@pytest.mark.parametrize("path", ["/manifest.json", "/icon.svg"])
+def test_manifest_and_icon_are_publicly_reachable(
+    client: TestClient, path: str
+) -> None:
+    # Unauthenticated on purpose: Android's WebAPK minting service fetches
+    # these from its own servers and cannot send our Basic Auth credentials.
+    response = client.get(path)
+
+    assert response.status_code == 200
 
 
 def test_share_target_rejects_missing_credentials(client: TestClient) -> None:

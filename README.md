@@ -79,6 +79,8 @@ This lands directly on the upload page with the audio file already attached — 
 - Requires HTTPS (Chrome only allows PWA install and share targets over HTTPS or `localhost`).
 - Android/Chrome only — Safari on iOS doesn't support the Web Share Target API.
 - If the browser's cached Basic Auth credentials for the site have expired, it may prompt you to log in again, same as any other visit.
+- `/manifest.json` and `/icon.svg` are intentionally not password-protected: a proper installable app (the kind that shows up in the OS share sheet) requires Android's WebAPK minting service to fetch these from its own servers, which cannot send our credentials. Everything else (the page itself, `/transcript`, `/sw.js`) stays behind Basic Auth.
+- If you installed the app before this share-target support existed (or before this fix), remove it from your home screen and reinstall from Chrome — Android only registers share targets at (re)install time.
 
 ## Health check
 
