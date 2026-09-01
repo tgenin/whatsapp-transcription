@@ -40,3 +40,51 @@ def test_index_serves_page_with_correct_password(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/html; charset=utf-8"
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["/manifest.json", "/sw.js", "/icon.svg"],
+)
+def test_static_pwa_asset_rejects_missing_credentials(
+    client: TestClient, path: str
+) -> None:
+    response = client.get(path)
+
+    assert response.status_code == 401
+    assert response.json()["error_code"] == "unauthorized"
+
+
+@pytest.mark.parametrize(
+    ("path", "content_type"),
+    [
+        ("/manifest.json", "application/manifest+json"),
+        ("/sw.js", "application/javascript"),
+        ("/icon.svg", "image/svg+xml"),
+    ],
+)
+def test_static_pwa_asset_served_with_correct_password(
+    client: TestClient, path: str, content_type: str
+) -> None:
+    response = client.get(path, auth=("user", "correct-password"))
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == content_type
+
+
+def test_share_target_rejects_missing_credentials(client: TestClient) -> None:
+    response = client.post("/share-target", follow_redirects=False)
+
+    assert response.status_code == 401
+    assert response.json()["error_code"] == "unauthorized"
+
+
+def test_share_target_redirects_to_index_with_correct_password(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/share-target", auth=("user", "correct-password"), follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/"
